@@ -8,6 +8,7 @@ import seaborn as sns
 
 import warnings as warnings 
 from bidi.algorithm import get_display
+import streamlit as st
 
 PASSWORD = "yaman"
 
@@ -145,6 +146,7 @@ safe_dpi = min(desired_dpi, max_allowed_dpi)
 # Ensure a reasonable minimum DPI
 safe_dpi = max(safe_dpi, 72)
 st.pyplot(plt)
+
 
 
 
