@@ -48,78 +48,84 @@ from bidi.algorithm import get_display
 grouped_data = df.groupby('fact_nm')['fin_val_tot'].sum().reset_index()
 grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=False)
 st.title("📊 تقرير الرسوم")
+factories = df['fact_nm'].unique()
+num_factories = len(factories)
 
-plt.figure(figsize=(12, 8), facecolor='black')
-colors = sns.color_palette('Set1', len(grouped_data))
-# Group fin_val_tot by fact_nm and sum the values
-grouped_data = df.groupby('fact_nm')['fin_val_tot'].sum().reset_index()
-# Sort by fin_val_tot descending for better visual emphasis
-grouped_data.sort_values(by='fin_val_tot', ascending=True, inplace=True)
+# تحديد عدد الصفوف والأعمدة للـsubplots
+cols = 2
+rows = (num_factories + cols - 1) // cols
 
-# Reshape the Arabic labels for proper display
-reshaped_labels = [get_display(arabic_reshaper.reshape(label)) for label in grouped_data['fact_nm']]
+fig, axes = plt.subplots(rows, cols, figsize=(24, 8 * rows), facecolor='black')
 
-# Create an explode effect to highlight the largest slice
+axes = axes.flatten()  # تحويلها لقائمة للتعامل بسهولة
 
-# Set up the figure with an improved style
-plt.figure(figsize=(10, 10) , facecolor='black')
+sns.set_style("darkgrid")
 
-sns.set(style="darkgrid", font="Arial", font_scale=1.2)
+for i, fact_name in enumerate(factories):
+    ax = axes[i]
+    ax.set_facecolor('black')
 
-ax,fig = plt.subplots(figsize=(12, 12), facecolor='black')
-ax.set_facecolor('black')
+    # تجميع البيانات لكل مصنع
+    grouped_data = df.query("fact_nm == @fact_name").groupby('good_nm')['fin_val_tot'].sum().reset_index()
+    grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=True)
 
-wedges, texts, autotexts = plt.pie(
-    grouped_data['fin_val_tot'],
-    labels=reshaped_labels,
- 
-    autopct='%1.1f%%',
-    startangle=90,
-    counterclock=True,
-    colors=plt.cm.seismic(np.linspace(0, 1, len(grouped_data))),
-    labeldistance=1.1,
-    textprops={'fontsize': 20, 'family': 'Arial', 'color': 'white'},
-    wedgeprops={'edgecolor': 'white', 'linewidth': 2},
-    shadow=True
-)
+    reshaped_labels = [get_display(arabic_reshaper.reshape(lbl)) for lbl in grouped_data['good_nm']]
 
-# Add a white circle in the middle to create a donut effect
-centre_circle = plt.Circle((0, 0), 0.70, fc='black')
-plt.gcf().gca().add_artist(centre_circle)
+    # رسم الأعمدة
+    bars = ax.bar(reshaped_labels, grouped_data['fin_val_tot'],
+                  color=sns.color_palette('tab20', len(grouped_data)))
 
-# Add a descriptive title that includes the total inventory value
-total_val = grouped_data['fin_val_tot'].sum()
-title_text = f"{get_display(arabic_reshaper.reshape('أرصدة المصانع في شركة السكر ' + " "+ date_title))}"
-plt.title(title_text, size=28, fontweight='bold', color='white', family='Arial', pad=20)
+    # كتابة القيم فوق الأعمدة
+    for bar, value in zip(bars, grouped_data['fin_val_tot']):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{int(value)}',
+                ha='center', va='bottom', fontsize=10, fontweight='bold', color='white')
 
+    # العنوان لكل مصنع
+    total_million = int(grouped_data['fin_val_tot'].sum() / 1000)
+    text = f"رصيد {fact_name} {total_million} مليون جنيه {date_title}"
+    bidi_title = get_display(arabic_reshaper.reshape(text))
+    ax.set_title(bidi_title, fontsize=14, color='white', fontweight='bold')
 
-plt.text(0.45, 0.6, 'ESIIC',
-         transform=plt.gcf().transFigure,  # بالنسبة للشكل كله
-         fontsize=60,
-         color='white',
-         alpha=0.5,           # شفافية
-         ha='center',
-         va='center',
-         rotation=30,         # ميل بسيط للناحية اليمنى
-         fontweight='bold',
-         family='arial')
+    ax.tick_params(axis='x', labelrotation=45, labelsize=10, colors='white')
+    ax.tick_params(axis='y', colors='white')
 
+# إخفاء أي subplot فاضي
+for j in range(i + 1, len(axes)):
+    fig.delaxes(axes[j])
 
-
+# ----------------------------
+# 2. إضافة العلامة المائية العامة
 # ----------------------------
 watermark_text = get_display(arabic_reshaper.reshape("قطاع نظم المعلومات"))
 plt.text(0.5, 0.5, watermark_text,
-         transform=plt.gcf().transFigure,  # بالنسبة للشكل كله
-         fontsize=60,
-         color='white',
-         alpha=0.5,           # شفافية
-         ha='center',
-         va='center',
-         rotation=30,         # ميل بسيط للناحية اليمنى
-         fontweight='bold')
+         transform=plt.gcf().transFigure,
+         fontsize=80, color='white', alpha=0.1,
+         ha='center', va='center', rotation=30, fontweight='bold')
+
+plt.text(0.48, 0.6, 'ESIIC',
+         transform=plt.gcf().transFigure,
+         fontsize=80, color='white', alpha=0.1,
+         ha='center', va='center', rotation=30, fontweight='bold', family='Arial')
 
 plt.tight_layout()
+
+# Ensure we don't exceed the maximum image dimension (2^16-1) when saving.
+# Calculate a safe DPI based on figure size in inches so width_px and height_px <= 65535.
+max_pixel = 2**16 - 1  # 65535
+fig_width_in, fig_height_in = fig.get_size_inches()
+
+# Maximum dpi allowed for each axis
+max_dpi_w = int(max_pixel / fig_width_in) if fig_width_in > 0 else 300
+max_dpi_h = int(max_pixel / fig_height_in) if fig_height_in > 0 else 300
+max_allowed_dpi = max(1, min(max_dpi_w, max_dpi_h))
+
+desired_dpi = 900
+safe_dpi = min(desired_dpi, max_allowed_dpi)
+
+# Ensure a reasonable minimum DPI
+safe_dpi = max(safe_dpi, 72)
 st.pyplot(plt)
+
 
 
 
