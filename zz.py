@@ -5,7 +5,7 @@ import arabic_reshaper
 from matplotlib import font_manager
 import sys
 import seaborn as sns
-import plotly.graph_objects as go
+
 import warnings as warnings 
 from bidi.algorithm import get_display
 
@@ -61,3 +61,4 @@ plt.pie(
 )
 
 st.pyplot(plt)
+
