@@ -13,7 +13,7 @@ from bidi.algorithm import get_display
 df= pd.read_csv(r"goodmst112025.csv" )
 df['fact_nm'] = df['factor_no']
 warnings.filterwarnings('ignore')
-import bar_chart_race as bcr
+
 total = df['fin_val_tot'].sum()
 date_title = f"\n نوفمبر 2025 \n إجمالي أرصدة المصانع: {total:.2f} ألف جنيه "
 
@@ -61,4 +61,5 @@ plt.pie(
 )
 
 st.pyplot(plt)
+
 
