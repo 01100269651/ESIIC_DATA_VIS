@@ -68,84 +68,90 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 grouped_data = df.groupby('fact_nm')['fin_val_tot'].sum().reset_index()
 grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=False)
-st.title("📊 تقرير الرسوم")
-factories = df['fact_nm'].unique()
-num_factories = len(factories)
 
-# تحديد عدد الصفوف والأعمدة للـsubplots
-cols = 2
-rows = (num_factories + cols - 1) // cols
+st.set_page_config(layout="wide")
+st.title("📊 تقرير الرسوم التفاعلي")
 
-fig, axes = plt.subplots(rows, cols, figsize=(24, 8 * rows), facecolor='black')
+# ===== مثال بيانات (استبدلها ببياناتك) =====
+# df = pd.read_excel("data.xlsx")
 
-axes = axes.flatten()  # تحويلها لقائمة للتعامل بسهولة
+# ===== فلترة =====
+factor_no = st.selectbox(
+    "اختر رقم الفاتورة",
+    sorted(df['factor_no'].unique())
+)
 
-sns.set_style("darkgrid")
+grouped_data = (
+    df.query('factor_no == @factor_no')
+    .groupby('good_nm')['fin_val_tot']
+    .sum()
+    .reset_index()
+    .sort_values(by='fin_val_tot', ascending=True)
+)
 
-for i, fact_name in enumerate(factories):
-    ax = axes[i]
-    ax.set_facecolor('black')
+reshaped_labels = [
+    get_display(arabic_reshaper.reshape(str(label)))
+    for label in grouped_data['good_nm']
+]
 
-    # تجميع البيانات لكل مصنع
-    grouped_data = df.query("fact_nm == @fact_name").groupby('good_nm')['fin_val_tot'].sum().reset_index()
-    grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=True)
+# ===== مؤشرات سريعة =====
+st.divider()
+col_m1, col_m2 = st.columns(2)
+with col_m1:
+    st.metric("عدد الأصناف", len(grouped_data))
+with col_m2:
+    st.metric(
+        "إجمالي القيمة",
+        f"{grouped_data['fin_val_tot'].sum():,.0f}"
+    )
 
-    reshaped_labels = [get_display(arabic_reshaper.reshape(lbl)) for lbl in grouped_data['good_nm']]
+st.divider()
 
-    # رسم الأعمدة
-    bars = ax.bar(reshaped_labels, grouped_data['fin_val_tot'],
-                  color=sns.color_palette('tab20', len(grouped_data)))
+# ===== الرسومات =====
+col1, col2 = st.columns(2)
 
-    # كتابة القيم فوق الأعمدة
-    for bar, value in zip(bars, grouped_data['fin_val_tot']):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{int(value)}',
-                ha='center', va='bottom', fontsize=10, fontweight='bold', color='white')
+# ---- Pie Chart ----
+with col1:
+    st.subheader("📌 توزيع القيم")
 
-    # العنوان لكل مصنع
-    total_million = int(grouped_data['fin_val_tot'].sum() / 1000)
-    text = f"رصيد {fact_name} {total_million} مليون جنيه {date_title}"
-    bidi_title = get_display(arabic_reshaper.reshape(text))
-    ax.set_title(bidi_title, fontsize=14, color='white', fontweight='bold')
+    fig1, ax1 = plt.subplots(figsize=(6, 6), facecolor='black')
+    colors = sns.color_palette('Set1', len(grouped_data))
 
-    ax.tick_params(axis='x', labelrotation=45, labelsize=10, colors='white')
-    ax.tick_params(axis='y', colors='white')
+    ax1.pie(
+        grouped_data['fin_val_tot'],
+        labels=reshaped_labels,
+        colors=colors,
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 12, 'fontweight': 'bold', 'color': 'white'}
+    )
+    st.pyplot(fig1)
 
-# إخفاء أي subplot فاضي
-for j in range(i + 1, len(axes)):
-    fig.delaxes(axes[j])
+# ---- Bar Chart ----
+with col2:
+    st.subheader("📌 مقارنة القيم")
 
-# ----------------------------
-# 2. إضافة العلامة المائية العامة
-# ----------------------------
-watermark_text = get_display(arabic_reshaper.reshape("قطاع نظم المعلومات"))
-plt.text(0.5, 0.5, watermark_text,
-         transform=plt.gcf().transFigure,
-         fontsize=80, color='white', alpha=0.1,
-         ha='center', va='center', rotation=30, fontweight='bold')
+    fig2, ax2 = plt.subplots(figsize=(6, 6))
+    sns.barplot(
+        x='fin_val_tot',
+        y=reshaped_labels,
+        data=grouped_data,
+        palette='Set1',
+        ax=ax2
+    )
+    ax2.set_xlabel("القيمة")
+    ax2.set_ylabel("")
+    st.pyplot(fig2)
 
-plt.text(0.48, 0.6, 'ESIIC',
-         transform=plt.gcf().transFigure,
-         fontsize=80, color='white', alpha=0.1,
-         ha='center', va='center', rotation=30, fontweight='bold', family='Arial')
+st.divider()
 
-plt.tight_layout()
+# ===== جدول =====
+st.subheader("📋 جدول البيانات")
+st.dataframe(grouped_data, use_container_width=True)
 
-# Ensure we don't exceed the maximum image dimension (2^16-1) when saving.
-# Calculate a safe DPI based on figure size in inches so width_px and height_px <= 65535.
-max_pixel = 2**16 - 1  # 65535
-fig_width_in, fig_height_in = fig.get_size_inches()
 
-# Maximum dpi allowed for each axis
-max_dpi_w = int(max_pixel / fig_width_in) if fig_width_in > 0 else 300
-max_dpi_h = int(max_pixel / fig_height_in) if fig_height_in > 0 else 300
-max_allowed_dpi = max(1, min(max_dpi_w, max_dpi_h))
-
-desired_dpi = 900
-safe_dpi = min(desired_dpi, max_allowed_dpi)
-
-# Ensure a reasonable minimum DPI
-safe_dpi = max(safe_dpi, 72)
 st.pyplot(plt)
+
 
 
 
