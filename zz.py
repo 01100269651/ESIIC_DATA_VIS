@@ -9,6 +9,26 @@ import seaborn as sns
 import warnings as warnings 
 from bidi.algorithm import get_display
 
+PASSWORD = "yaman"
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+def login():
+    if st.session_state.password == PASSWORD:
+        st.session_state.authenticated = True
+    else:
+        st.error("❌ كلمة السر غير صحيحة")
+
+if not st.session_state.authenticated:
+    st.title("🔐 تسجيل الدخول")
+    st.text_input(
+        "أدخل كلمة السر",
+        type="password",
+        key="password"
+    )
+    st.button("دخول", on_click=login)
+    st.stop()   # ⛔ يوقف باقي الصفحة
 
 df= pd.read_csv(r"goodmst112025.csv" )
 df['fact_nm'] = df['factor_no']
@@ -125,6 +145,7 @@ safe_dpi = min(desired_dpi, max_allowed_dpi)
 # Ensure a reasonable minimum DPI
 safe_dpi = max(safe_dpi, 72)
 st.pyplot(plt)
+
 
 
 
