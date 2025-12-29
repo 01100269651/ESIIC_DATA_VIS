@@ -70,16 +70,23 @@ grouped_data = df.groupby('fact_nm')['fin_val_tot'].sum().reset_index()
 grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=False)
 
 st.set_page_config(layout="wide")
-st.title("📊 تقرير الرسوم التفاعلي")
+st.title("📊 تقرير المصانع التفاعلي")
 
 # ===== مثال بيانات (استبدلها ببياناتك) =====
 # df = pd.read_excel("data.xlsx")
 
-# ===== فلترة =====
-factor_no = st.selectbox(
-    "اختر رقم الفاتورة",
-    sorted(df['factor_no'].unique())
+
+# إنشاء عمود للعرض (رقم المصنع + الاسم)
+df['factory_display'] = df['factor_no'].astype(str) + ' - ' + df['fact_nm']
+
+# selectbox يعرض الرقم والاسم
+selected_factory = st.selectbox(
+    "اختر المصنع",
+    df['factory_display'].unique()
 )
+
+# استخراج رقم المصنع المختار فقط
+selected_factor_no = int(selected_factory.split(' - ')[0])
 
 grouped_data = (
     df.query('factor_no == @factor_no')
@@ -151,6 +158,7 @@ st.dataframe(grouped_data, use_container_width=True)
 
 
 st.pyplot(plt)
+
 
 
 
