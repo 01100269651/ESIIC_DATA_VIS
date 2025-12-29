@@ -86,7 +86,7 @@ selected_factory = st.selectbox(
 )
 
 # استخراج رقم المصنع المختار فقط
-selected_factor_no = int(selected_factory.split(' - ')[0])
+factor_no  = int(selected_factory.split(' - ')[0])
 
 grouped_data = (
     df.query('factor_no == @factor_no')
@@ -158,6 +158,7 @@ st.dataframe(grouped_data, use_container_width=True)
 
 
 st.pyplot(plt)
+
 
 
 
