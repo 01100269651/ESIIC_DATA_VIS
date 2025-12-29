@@ -20,7 +20,7 @@ def login():
         st.session_state.authenticated = True
     else:
         st.error("❌ كلمة السر غير صحيحة")
-
+st.title("📊 شركة السكر و الصناعات التكاملية المصرية")
 if not st.session_state.authenticated:
     st.title("🔐 تسجيل الدخول")
     st.text_input(
