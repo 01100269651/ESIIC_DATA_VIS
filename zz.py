@@ -126,7 +126,7 @@ with col1:
         autopct='%1.1f%%',
         startangle=90,
         
-        textprops={'fontsize': 12, 'fontweight': 'bold', 'color': 'white'}
+        textprops={'fontsize': 12, 'fontweight': 'bold', 'color': 'white' ,'fontfamily': 'Arial'}
     )
     st.pyplot(fig1)
 
@@ -142,6 +142,7 @@ with col2:
         data=grouped_data,
         palette='Set2',
         ax=ax2
+        
     )
     ax2.set_xlabel("القيمة")
     ax2.set_ylabel("")
