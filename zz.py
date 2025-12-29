@@ -136,7 +136,7 @@ with col1:
 
 # ---- Bar Chart ----
 with col2:
-    st.subheader("📌 مقارنة القيم")
+    st.subheader("📌 مقارنة الأرصدة")
 
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     sns.barplot(
