@@ -105,10 +105,10 @@ reshaped_labels = [
 st.divider()
 col_m1, col_m2 = st.columns(2)
 with col_m1:
-    st.metric("عدد الأصناف", len(grouped_data))
+    st.metric("عدد بنود المخزون", len(grouped_data))
 with col_m2:
     st.metric(
-        "إجمالي القيمة",
+        "إجمالي الأرصدة",
         f"{grouped_data['fin_val_tot'].sum():,.0f}"
     )
 
@@ -119,7 +119,7 @@ col1, col2 = st.columns(2)
 
 # ---- Pie Chart ----
 with col1:
-    st.subheader("📌 توزيع القيم")
+    st.subheader("📌 توزيع الأرصدة")
 
     fig1, ax1 = plt.subplots(figsize=(6, 6), facecolor='black')
     colors = sns.color_palette('Set1', len(grouped_data))
@@ -158,6 +158,7 @@ st.dataframe(grouped_data, use_container_width=True)
 
 
 st.pyplot(plt)
+
 
 
 
