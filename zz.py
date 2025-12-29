@@ -61,13 +61,8 @@ df['fact_nm']=df['fact_nm'].replace({75: 'سكر وتكرير جرجا'})
 df['fact_nm']=df['fact_nm'].replace({3: 'العطور'})
 df['fact_nm']=df['fact_nm'].replace({4: 'التقطير'})
 df['fact_nm']=df['fact_nm'].replace({5: 'التكرير'})
-import streamlit as st
-import matplotlib.pyplot as plt
-import seaborn as sns
-import arabic_reshaper
-from bidi.algorithm import get_display
 grouped_data = df.groupby('fact_nm')['fin_val_tot'].sum().reset_index()
-grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=False)
+grouped_data = grouped_data.sort_values(by='fin_val_tot', ascending=True)
 
 st.set_page_config(layout="wide")
 st.title("📊 تقرير المصانع التفاعلي")
@@ -122,14 +117,15 @@ with col1:
     st.subheader("📌 توزيع الأرصدة")
 
     fig1, ax1 = plt.subplots(figsize=(6, 6), facecolor='black')
-    colors = sns.color_palette('Set1', len(grouped_data))
+    colors1 = sns.color_palette('tab20', len(grouped_data))
 
     ax1.pie(
         grouped_data['fin_val_tot'],
         labels=reshaped_labels,
-        colors=colors,
+        colors=colors1,
         autopct='%1.1f%%',
         startangle=90,
+        
         textprops={'fontsize': 12, 'fontweight': 'bold', 'color': 'white'}
     )
     st.pyplot(fig1)
@@ -137,13 +133,14 @@ with col1:
 # ---- Bar Chart ----
 with col2:
     st.subheader("📌 مقارنة الأرصدة")
+   
 
     fig2, ax2 = plt.subplots(figsize=(6, 6))
     sns.barplot(
         x='fin_val_tot',
         y=reshaped_labels,
         data=grouped_data,
-        palette='Set1',
+        palette='Set2',
         ax=ax2
     )
     ax2.set_xlabel("القيمة")
